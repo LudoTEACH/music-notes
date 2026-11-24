@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lire les notes sur la portée</title>
+<style>
+:root{--bg:#f2eee4;--cd:#fffdf8;--ink:#23201b;--mu:#6b655a;--ln:#d9d2c1;--ac:#0e7490;--acbg:#dff1f5;--ok:#15803d;--ko:#b91c1c}
+@media (prefers-color-scheme:dark){:root{--bg:#17171c;--cd:#22222a;--ink:#f1efe9;--mu:#a9a69c;--ln:#3a3a46;--ac:#5fd0e8;--acbg:#1b3a44;--ok:#4ade80;--ko:#f87171}}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:17px/1.5 "Segoe UI",Verdana,sans-serif;padding:0 16px 56px}
+main{max-width:760px;margin:0 auto}
+h1{font:700 clamp(28px,5.5vw,42px)/1.1 Georgia,serif;margin:28px 0 4px}
+.sub{color:var(--mu);margin:0 0 14px}
+.snd{display:flex;gap:8px;align-items:center;color:var(--mu);margin-bottom:12px}
+nav{display:flex;gap:6px;border-bottom:2px solid var(--ln);margin-bottom:20px}
+nav button{flex:1;background:none;border:0;border-bottom:4px solid transparent;margin-bottom:-2px;padding:10px 4px;font:600 16px inherit;font-family:inherit;color:var(--mu);cursor:pointer}
+nav button[aria-selected=true]{color:var(--ink);border-color:var(--ac)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+[hidden]{display:none!important}
+select{font:inherit;padding:8px 10px;border:2px solid var(--ln);border-radius:10px;background:var(--cd);color:var(--ink)}
+.tools{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.card{background:var(--cd);border:1px solid var(--ln);border-radius:18px;padding:18px;text-align:center}
+.stf{width:100%;height:auto;max-height:230px;color:var(--ink);display:block;margin:0 auto}
+.nt{transition:color .15s}.nt.ok{color:var(--ok)}.nt.ko{color:var(--ko)}.nt.cur{color:var(--ac)}
+.lab{font:700 17px Georgia,serif;fill:currentColor;text-anchor:middle}
+.clk{cursor:pointer}
+.row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.btn{background:var(--ac);color:#fff;border:0;border-radius:10px;padding:11px 20px;font:700 16px inherit;font-family:inherit;cursor:pointer}
+@media (prefers-color-scheme:dark){.btn{color:#10242b}}
+.btn.ghost{background:none;color:var(--ink);border:2px solid var(--ln)}
+.bar{display:flex;justify-content:space-between;color:var(--mu);font-size:15px;margin-bottom:8px}
+.names{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:14px 0 6px}
+.names button{background:var(--cd);border:2px solid var(--ln);border-radius:10px;padding:14px 0;font:700 clamp(15px,4.2vw,22px) Georgia,serif;color:var(--ink);cursor:pointer}
+.names button:hover:not(:disabled){border-color:var(--ac)}
+.names button.right{background:var(--ok);border-color:var(--ok);color:#fff}.names button.wrong{background:var(--ko);border-color:var(--ko);color:#fff}
+.lv{display:flex;width:100%;text-align:left;gap:14px;align-items:center;background:var(--cd);border:2px solid var(--ln);border-radius:14px;padding:13px 16px;margin:0 0 10px;font:inherit;color:var(--ink);cursor:pointer}
+.lv:hover{border-color:var(--ac)}.lv b{font:700 20px Georgia,serif;min-width:5.5ch}.lv small{display:block;color:var(--mu)}
+.fb{min-height:3em;margin-top:6px}.fb.ok{color:var(--ok)}.fb.ko{color:var(--ko)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px}
+.chips span{background:var(--acbg);border-radius:999px;padding:3px 12px;font-size:15px}
+.tip{color:var(--mu);font-size:15px}
+.score{font:700 54px Georgia,serif}
+.shake{animation:sh .3s}@keyframes sh{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+@media (prefers-reduced-motion:reduce){.shake{animation:none}.nt{transition:none}}
+</style>
+</head>
+<body>
+<main>
+<h1>Lire les notes</h1>
+<p class="sub">Clé de sol : repère les notes sur la portée, écoute-les, puis enchaîne des mélodies par intervalles.</p>
+<label class="snd"><input type="checkbox" id="snd" checked> Jouer le son des notes (monte le volume)</label>
+<nav role="tablist">
+<button role="tab" aria-selected="true" data-tab="dec">Découvrir</button>
+<button role="tab" aria-selected="false" data-tab="not">Notes</button>
+<button role="tab" aria-selected="false" data-tab="mel">Mélodies</button>
+</nav>
+
+<section id="dec">
+<div class="card"><div id="dstaff"></div>
+<div class="row"><button class="btn" id="dplay">▶ Écouter la gamme</button><button class="btn ghost" id="dhide">Cacher les noms</button></div></div>
+<p class="tip">Touche une note pour l’entendre. Le premier <b>do</b> est tout en bas, sur une petite ligne à lui. Le <b>sol</b> est sur la 2ᵉ ligne en partant du bas : c’est la ligne que la clé de sol entoure. Les notes montent : do ré mi fa sol la si do.</p>
+</section>
+
+<section id="not" hidden>
+<div id="nset"><div id="nlv"></div></div>
+<div id="nplay" hidden><div class="bar"><span id="nq"></span><span id="ns"></span></div><div class="card" id="nc"></div></div>
+</section>
+
+<section id="mel" hidden>
+<div id="mset">
+<div class="tools"><label>Longueur <select id="mlen"><option value="4">4 notes</option><option value="8">8 notes</option></select></label>
+<label>Étendue <select id="mrg"><option value="0">do → do (8 notes)</option><option value="1">Large : la grave → la aigu</option></select></label></div>
+<div id="mlv"></div>
+<p class="tip">Le niveau choisi donne l’intervalle dominant : quelques intervalles plus petits sont mêlés pour varier la mélodie.</p>
+</div>
+<div id="mplay" hidden><div class="bar"><span id="mq"></span><span id="ms"></span></div><div class="card" id="mc"></div></div>
+</section>
+</main>
+
+<script>
+const NAMES=["do","ré","mi","fa","sol","la","si"],OFF=[0,2,4,5,7,9,11],INT=["","seconde","tierce","quarte","quinte","sixte","septième","octave"];
+const md=n=>((n%7)+7)%7,nm=n=>NAMES[md(n)],midi=n=>60+12*Math.floor(n/7)+OFF[md(n)];
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],rnd=n=>Math.random()*n|0;
+const range=(a,b)=>Array.from({length:b-a+1},(_,i)=>a+i);
+
+// ---- Son (Web Audio)
+let AC;
+function tone(n,at=0){
+  if(!$("#snd").checked)return;
+  try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state==="suspended")AC.resume();
+    const f=440*2**((midi(n)-69)/12),t=AC.currentTime+at+.02,g=AC.createGain();
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.35,t+.015);g.gain.exponentialRampToValueAtTime(.001,t+1.3);g.connect(AC.destination);
+    [["triangle",f,1],["sine",2*f,.3]].forEach(([ty,fr,v])=>{const o=AC.createOscillator(),h=AC.createGain();o.type=ty;o.frequency.value=fr;h.gain.value=v;o.connect(h).connect(g);o.start(t);o.stop(t+1.35)});
+  }catch(e){}
+}
+const playSeq=a=>a.forEach((n,i)=>tone(n,i*.55));
+
+// ---- Portée en SVG (do grave = 0, clé de sol)
+const Y0=44,yN=n=>Y0+48-(n-2)*6;
+const CLEF='<path d="M27 62C27 68 37 69 36 60C36 40 33 10 33 0C33 -10 39 -16 41 -10C43 -3 36 8 28 20C18 32 24 46 36 44C46 42 46 28 36 28C29 28 27 36 31 40" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>';
+function staff(ns,o={}){
+  const W=o.W||620,x=o.x||ns.map((_,i)=>110+i*66);
+  let s=`<svg viewBox="0 0 ${W} 150" class="stf" role="img" aria-label="${o.aria||"Portée"}">`;
+  for(let i=0;i<5;i++)s+=`<line x1="8" x2="${W-8}" y1="${Y0+12*i}" y2="${Y0+12*i}" stroke="currentColor" stroke-width="1.6"/>`;
+  s+=`<g transform="translate(14 ${Y0})">${CLEF}</g>`;
+  ns.forEach((n,i)=>{
+    const cx=x[i],cy=yN(n),up=n<6,h=o.h&&o.h[i];
+    s+=`<g class="nt ${(o.st&&o.st[i])||""}${o.click?" clk":""}" data-i="${i}">`;
+    if(n<=0)for(let m=0;m>=n;m-=2)s+=`<line x1="${cx-15}" x2="${cx+15}" y1="${yN(m)}" y2="${yN(m)}" stroke="currentColor" stroke-width="1.6"/>`;
+    if(n>=12)for(let m=12;m<=n;m+=2)s+=`<line x1="${cx-15}" x2="${cx+15}" y1="${yN(m)}" y2="${yN(m)}" stroke="currentColor" stroke-width="1.6"/>`;
+    s+=`<rect x="${cx-18}" y="${cy-18}" width="36" height="36" fill="transparent"/>`;
+    s+=`<ellipse cx="${cx}" cy="${cy}" rx="8.4" ry="6" transform="rotate(-20 ${cx} ${cy})" stroke="currentColor" stroke-width="2.4" style="fill:${h?"var(--cd)":"currentColor"}"/>`;
+    s+=up?`<line x1="${cx+7.7}" x2="${cx+7.7}" y1="${cy-1}" y2="${cy-36}" stroke="currentColor" stroke-width="2"/>`:`<line x1="${cx-7.7}" x2="${cx-7.7}" y1="${cy+1}" y2="${cy+36}" stroke="currentColor" stroke-width="2"/>`;
+    if(o.lab&&o.lab[i])s+=`<text class="lab" x="${cx}" y="143">${o.lab[i]}</text>`;
+    s+=`</g>`;
+  });
+  return s+"</svg>";
+}
+const namesHTML=()=>`<div class="names">${NAMES.map((n,i)=>`<button data-i="${i}">${n}</button>`).join("")}</div>`;
+
+// ---- Onglets
+$$("nav button").forEach(b=>b.onclick=()=>{$$("nav button").forEach(x=>x.setAttribute("aria-selected",x===b));["dec","not","mel"].forEach(id=>$("#"+id).hidden=id!==b.dataset.tab);if(nTimer&&b.dataset.tab!=="not")clearInterval(nTimer)});
+
+// ---- Découvrir
+const G=range(0,7);let hide=false,seen=new Set();
+function drawDec(){$("#dstaff").innerHTML=staff(G,{click:true,h:G.map((_,i)=>i%2),lab:G.map((n,i)=>hide&&!seen.has(i)?"":nm(n)),aria:"Les 8 notes de do à do"})}
+$("#dstaff").onclick=e=>{const g=e.target.closest(".nt");if(!g)return;const i=+g.dataset.i;seen.add(i);tone(G[i]);drawDec()};
+$("#dplay").onclick=()=>playSeq(G);
+$("#dhide").onclick=e=>{hide=!hide;seen=new Set();e.target.textContent=hide?"Montrer les noms":"Cacher les noms";drawDec()};
+drawDec();
+
+// ---- Notes isolées
+const NL=[
+{t:"Niveau 1",n:"do · mi · sol",s:"3 notes pour démarrer",p:[0,2,4]},
+{t:"Niveau 2",n:"do → sol",s:"5 notes",p:range(0,4)},
+{t:"Niveau 3",n:"do → do",s:"les 8 notes de la gamme",p:range(0,7)},
+{t:"Niveau 4",n:"Lignes en plus",s:"du la grave au la aigu : notes hors de la portée",p:range(-2,12)},
+{t:"Défi",n:"45 secondes",s:"Combien de notes (do → do) en 45 s ?",p:range(0,7),T:45}
+];
+$("#nlv").innerHTML=NL.map((l,i)=>`<button class="lv" data-i="${i}"><b>${l.t}</b><span>${l.n}<small>${l.s}</small></span></button>`).join("");
+$("#nlv").onclick=e=>{const b=e.target.closest(".lv");if(b)nStart(+b.dataset.i)};
+let nl,nn,nh,nPrev,nAsked,nSc,nTimes,nT0,nDone,nTimer,nEnd,nOver;
+function nStart(i){
+  nl=NL[i];nOver=false;nAsked=0;nSc=0;nTimes=[];nPrev=null;
+  $("#nset").hidden=true;$("#nplay").hidden=false;
+  if(nl.T){nEnd=Date.now()+nl.T*1000;clearInterval(nTimer);nTimer=setInterval(()=>{const r=Math.ceil((nEnd-Date.now())/1000);if(r<=0){clearInterval(nTimer);nFin()}else $("#nq").textContent=`${nl.t} · ${r} s`},250)}
+  nAsk();
+}
+function nAsk(){
+  if(!nl.T&&nAsked>=10)return nFin();
+  do{nn=nl.p[rnd(nl.p.length)]}while(nn===nPrev&&nl.p.length>1);
+  nPrev=nn;nh=Math.random()<.5;nDone=false;nAsked++;nT0=Date.now();
+  if(!nl.T)$("#nq").textContent=`${nl.t} · note ${nAsked}/10`;
+  $("#ns").textContent=`Score : ${nSc}`;
+  $("#nc").innerHTML=staff([nn],{W:300,x:[190],h:[nh],aria:"Quelle est cette note ?"})+`<p style="margin:4px 0 0">Quelle est cette note ?</p>`+namesHTML()+`<div class="fb" id="nfb" aria-live="polite"></div><div class="row"><button class="btn ghost" id="nre">🔊 Réécouter</button><button class="btn" id="nnx" hidden>Suivant</button></div>`;
+  tone(nn);
+  $$("#nc .names button").forEach(b=>b.onclick=()=>nAns(+b.dataset.i,b));
+  $("#nre").onclick=()=>tone(nn);
+}
+function nAns(i,b){
+  if(nDone)return;nDone=true;const ok=i===md(nn);
+  if(ok){nSc++;nTimes.push(Date.now()-nT0)}
+  $$("#nc .names button").forEach(x=>{x.disabled=true;if(+x.dataset.i===md(nn))x.classList.add("right")});
+  if(!ok)b.classList.add("wrong");
+  $("#nc .nt").classList.add(ok?"ok":"ko");
+  $("#nc svg").insertAdjacentHTML("beforeend",`<text class="lab" x="190" y="143" style="fill:var(--${ok?"ok":"ko"})">${nm(nn)}</text>`);
+  $("#ns").textContent=`Score : ${nSc}`;tone(nn);
+  const f=$("#nfb");f.className="fb "+(ok?"ok":"ko");f.textContent=ok?"Bravo !":`C’était ${nm(nn)}.`;
+  if(ok||nl.T)setTimeout(()=>{if(!nOver)nAsk()},ok?650:1000);
+  else{$("#nnx").hidden=false;$("#nnx").onclick=nAsk;$("#nnx").focus()}
+}
+function nFin(){
+  clearInterval(nTimer);nOver=true;nDone=false;const i=NL.indexOf(nl),avg=nTimes.length?(nTimes.reduce((a,b)=>a+b)/nTimes.length/1000).toFixed(1):"–";
+  $("#nq").textContent=nl.t;$("#ns").textContent="";
+  $("#nc").innerHTML=`<div class="score">${nSc}${nl.T?" notes":" / 10"}</div><p>Temps moyen par bonne réponse : ${avg} s.</p><p>${!nl.T&&nSc>=9?"Excellent, passe au niveau suivant !":!nl.T&&nSc>=7?"Bien joué !":"Continue, la vitesse viendra avec l’entraînement."}</p><div class="row"><button class="btn ghost" id="nb">Niveaux</button><button class="btn" id="nr">Rejouer</button>${!nl.T&&nSc>=8&&i<NL.length-1?'<button class="btn" id="nx2">Niveau suivant</button>':""}</div>`;
+  $("#nb").onclick=()=>{$("#nplay").hidden=true;$("#nset").hidden=false};$("#nr").onclick=()=>nStart(i);
+  if($("#nx2"))$("#nx2").onclick=()=>nStart(i+1);
+}
+
+// ---- Mélodies par intervalles
+const ML=[
+{k:1,n:"Secondes",s:"On passe à la note voisine : ligne ↔ espace."},
+{k:2,n:"Tierces",s:"On saute une note : ligne → ligne, espace → espace."},
+{k:3,n:"Quartes",s:"On saute deux notes : ligne → espace."},
+{k:4,n:"Quintes",s:"On saute trois notes : ligne → ligne, espace → espace."},
+{k:0,n:"Mélange",s:"Des secondes aux quintes, dans le désordre."}
+];
+$("#mlv").innerHTML=ML.map((l,i)=>`<button class="lv" data-i="${i}"><b>${l.n}</b><span>${l.s}</span></button>`).join("");
+$("#mlv").onclick=e=>{const b=e.target.closest(".lv");if(b)mStart(+b.dataset.i)};
+let ml,mN,mPos,mErr,mSt,mLab,mH,mClean=0,mTot=0;
+function gen(k,len,lo,hi){
+  let n=lo+rnd(hi-lo+1);const a=[n];
+  while(a.length<len){const st=k===0?1+rnd(4):(Math.random()<.7?k:1+rnd(k));const c=[n-st,n+st].filter(x=>x>=lo&&x<=hi);n=c[rnd(c.length)];a.push(n)}
+  return a;
+}
+function mStart(i){
+  if(i!==undefined)ml=ML[i];
+  const len=+$("#mlen").value,wide=$("#mrg").value==="1";
+  mN=gen(ml.k,len,wide?-2:0,wide?12:7);mPos=0;mErr=0;mSt=mN.map((_,j)=>j?"":"cur");mLab=mN.map(()=>"");mH=mN.map(()=>Math.random()<.5);
+  $("#mset").hidden=true;$("#mplay").hidden=false;mDraw();playSeq(mN);
+}
+function mDraw(fin){
+  const L=mN.length,step=L===4?110:66;
+  $("#mq").textContent=`${ml.n} · ${L} notes`;$("#ms").textContent=`Sans faute : ${mClean}/${mTot}`;
+  let h=staff(mN,{x:mN.map((_,i)=>110+i*step),st:mSt,lab:mLab,h:mH,aria:"Mélodie à nommer"});
+  if(!fin){
+    h+=`<p style="margin:4px 0 0">Nomme les notes dans l’ordre, de gauche à droite.</p>`+namesHTML()+`<div class="fb" id="mfb" aria-live="polite"></div><div class="row"><button class="btn ghost" id="mre">🔊 Écouter la mélodie</button></div>`;
+  }else{
+    const iv=mN.slice(1).map((n,i)=>{const d=n-mN[i],a=Math.abs(d);return `<span>${INT[a]||a+1+"e"} ${d>0?"↑":"↓"}</span>`}).join("");
+    h+=`<div class="chips" aria-label="Intervalles">${iv}</div><p>${mErr?`${mErr} erreur${mErr>1?"s":""}. Réécoute et réessaie !`:"Sans faute, bravo !"}</p><div class="row"><button class="btn ghost" id="mre">🔊 Réécouter</button><button class="btn ghost" id="mb">Niveaux</button><button class="btn" id="mn">Nouvelle mélodie</button></div>`;
+  }
+  $("#mc").innerHTML=h;
+  $("#mre").onclick=()=>playSeq(mN);
+  if(fin){$("#mb").onclick=()=>{$("#mplay").hidden=true;$("#mset").hidden=false};$("#mn").onclick=()=>mStart();$("#mn").focus()}
+  else $$("#mc .names button").forEach(b=>b.onclick=()=>mAns(+b.dataset.i,b));
+}
+function mAns(i,b){
+  if(i===md(mN[mPos])){
+    mSt[mPos]="ok";mLab[mPos]=nm(mN[mPos]);tone(mN[mPos]);mPos++;
+    if(mPos>=mN.length){mTot++;if(!mErr)mClean++;return mDraw(true)}
+    mSt[mPos]="cur";mDraw();
+  }else{
+    mErr++;mSt[mPos]="ko";mDraw();
+    const f=$("#mfb");f.className="fb ko";f.textContent="Essaie encore.";$("#mc svg").classList.add("shake");
+    setTimeout(()=>{if(mPos<mN.length&&mSt[mPos]==="ko"){mSt[mPos]="cur";mDraw()}},700);
+  }
+}
+</script>
+</body>
+</html>
